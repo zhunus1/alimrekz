@@ -1,49 +1,119 @@
+import os
 import datetime
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, FileExtensionValidator
+
 
 def current_year():
-        return datetime.date.today().year
+    return datetime.date.today().year
     
 def max_value_current_year(value):
     return MaxValueValidator(current_year())(value)
 
 # Create your models here.
 class StatisticDocument(models.Model):
+    TYPES = (
+        ('rude', 'Грубая смертность'),
+        ('prevent', 'Предотвратимая смертность'),
+    )
+
+    document_type = models.CharField(
+        max_length = 25, 
+        choices = TYPES,
+        verbose_name = "Тип документа",
+    )
+
+    document = models.FileField(
+        upload_to = 'documents/',
+        validators = [
+            FileExtensionValidator(
+                allowed_extensions=["csv"]
+            )
+        ],
+        verbose_name = "Документ",
+    )
     
-    document = models.FileField(upload_to='files/')
-    year = models.CharField(
-        max_length = 255,
+    year = models.PositiveIntegerField(
+        validators = [
+            MinValueValidator(1991), 
+            max_value_current_year
+        ],
+        verbose_name = "Год",
+    )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
     )
 
     def __str__(self):
-        return self.year
+        return "Документ за %s год" % self.year
+    
+    class Meta:
+        verbose_name = "Документ"
+        verbose_name_plural = "Документы"
 
 
 class DiseaseGroup(models.Model):
     name = models.CharField(
         max_length = 255,
+        verbose_name = "Название",
+    )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
     )
     
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = "Группа болезни"
+        verbose_name_plural = "Группа болезней"
 
 
 class Region(models.Model):
     name = models.CharField(
         max_length = 255,
+        verbose_name = "Название",
     )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
+    )
+
     def __str__(self):
         return self.name
+    
+    class Meta:
+        verbose_name = "Регион"
+        verbose_name_plural = "Регионы"
 
 
 class DeathStatistic(models.Model):
-    
     GENDERS = (
         ('муж', 'муж'),
         ('жен', 'жен'),
         ('всего', 'всего'),
     )
+
     AGES = (
         ('0-4', '0-4'),
         ('5-9', '5-9'),
@@ -61,34 +131,61 @@ class DeathStatistic(models.Model):
         ('65-69', '65-69'),
         ('70-74', '70-74'),
     )
+
     region = models.ForeignKey(
         Region, 
-        on_delete = models.CASCADE
+        on_delete = models.CASCADE,
+        verbose_name = "Регион",
     )
+
     group = models.ForeignKey(
         DiseaseGroup, 
-        on_delete = models.CASCADE
+        on_delete = models.CASCADE,
+        verbose_name = "Группа заболевания",
     )
+
     year = models.PositiveIntegerField(
         validators = [
-            MinValueValidator(2015), 
+            MinValueValidator(1991), 
             max_value_current_year
-        ]
+        ],
+        verbose_name = "Год",
     )
+
     age = models.CharField(
         max_length = 5, 
         choices = AGES,
+        verbose_name = "Возраст",
     )
+
     gender = models.CharField(
         max_length = 5, 
         choices = GENDERS,
+        verbose_name = "Пол",
     )
-    value = models.FloatField()
+
+    value = models.FloatField(
+        verbose_name = "Значение",
+    )
+
     disease_name = models.CharField(
         max_length = 255,
+        verbose_name = "Болезнь",
+    )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
     )
 
     class Meta:
+        verbose_name = "Грубая смертность"
+        verbose_name_plural = "Грубая смертность"
         constraints = [
             models.UniqueConstraint(
                 fields = [
@@ -117,37 +214,60 @@ class PreventStatistic(models.Model):
 
     region = models.ForeignKey(
         Region, 
-        on_delete = models.CASCADE
+        on_delete = models.CASCADE,
+        verbose_name = "Регион",
     )
 
     year = models.PositiveIntegerField(
         validators = [
-            MinValueValidator(2015), 
+            MinValueValidator(1991), 
             max_value_current_year
-        ]
+        ],
+        verbose_name = "Год",
     )
 
     disease = models.CharField(
         max_length = 255,
+        verbose_name = "Болезнь",
     )
 
     standard = models.CharField(
         max_length = 5, 
         choices = STANDARDS,
+        verbose_name = "Стандарт",
     )
 
     gender = models.CharField(
         max_length = 5, 
         choices = GENDERS,
+        verbose_name = "Пол",
     )
 
-    preventive =  models.FloatField()
+    preventive =  models.FloatField(
+        verbose_name = "Превентивный",
+    )
 
-    curable = models.FloatField()
+    curable = models.FloatField(
+        verbose_name = "Излечимый",
+    )
 
-    preventable = models.FloatField()
+    preventable = models.FloatField(
+        verbose_name = "Предотвратимый",
+    )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
+    )
 
     class Meta:
+        verbose_name = "Предотвратимая смертность"
+        verbose_name_plural = "Предотвратимая смертность"
         constraints = [
             models.UniqueConstraint(
                 fields = [
@@ -159,4 +279,4 @@ class PreventStatistic(models.Model):
                 ],
                 name = "prevent_statistic_unique"
             )
-        ]
+        ]  

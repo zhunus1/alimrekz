@@ -11,6 +11,7 @@ from .models import (
 @admin.register(StatisticDocument)
 class StatisticDocumentModelAdmin(admin.ModelAdmin):
     fields = (
+        'document_type',
         'document',
         'year',
     )
@@ -41,4 +42,13 @@ class DeathStatisticModelAdmin(admin.ModelAdmin):
 
 @admin.register(PreventStatistic)
 class PreventStatisticModelAdmin(admin.ModelAdmin):
-    pass
+    fields = (
+        'region',
+        'year',
+        'disease',
+        'standard',
+        'gender',
+        'preventive',
+        'curable',
+        'preventable'
+    )

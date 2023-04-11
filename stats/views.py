@@ -9,12 +9,24 @@ from .models import (
 )
 from .serializers import (
     DeathStatisticSerializer,
-    PreventStatisticSerializer
+    PreventStatisticSerializer,
+    DiseaseGroupSerializer,
+    RegionSerializer
 )
 
 # Create your views here.
 #TO-DO:Filters for both API
 #TO-DO: Override get_queryset with select_related
+
+class DiseaseGroupViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = DiseaseGroup.objects.all()
+    serializer_class = DiseaseGroupSerializer
+
+
+class RegionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Region.objects.all()
+    serializer_class = RegionSerializer
+
 
 class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DeathStatistic.objects.select_related(
@@ -22,6 +34,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'group'
     ).all()
     serializer_class = DeathStatisticSerializer
+
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PreventStatistic.objects.select_related(

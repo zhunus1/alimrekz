@@ -31,15 +31,13 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
     class Meta:
         model = DeathStatistic
         fields = (
-            'id',
             'region',
             'group',
             'year',
-            'age',
-            'gender',
             'disease_name',
             'value',
         )
+
 
 
 class PreventStatisticSerializer(serializers.ModelSerializer):

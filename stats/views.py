@@ -1,6 +1,9 @@
 from django.shortcuts import render
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
+from rest_framework.decorators import action
+
 from .models import (
     DiseaseGroup,
     Region,
@@ -11,12 +14,9 @@ from .serializers import (
     DeathStatisticSerializer,
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
-    RegionSerializer
+    RegionSerializer,
 )
 
-# Create your views here.
-#TO-DO:Filters for both API
-#TO-DO: Override get_queryset with select_related
 
 class DiseaseGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DiseaseGroup.objects.all()
@@ -34,6 +34,18 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'group'
     ).all()
     serializer_class = DeathStatisticSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+    )
+    filterset_fields = (
+        'region',
+        'disease_name',
+        'age',
+        'gender',
+        'group',
+        'year'
+    )
+
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
@@ -41,3 +53,15 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'region',
     ).all()
     serializer_class = PreventStatisticSerializer
+    filter_backends = (
+        DjangoFilterBackend,
+    )
+    filterset_fields = (
+        'region',
+        'disease',
+        'gender',
+        'standard',
+        'year'
+    )
+
+    #TO-DO create separate action for heatmap

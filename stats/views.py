@@ -58,7 +58,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                 ).distinct()
             except FieldError as error:
                 return Response(
-                    {"message": "Field error, use only gender, year, age or disease_name"},
+                    {"message" : "Field error, use only gender, year, age or disease_name"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
             

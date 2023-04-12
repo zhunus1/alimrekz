@@ -39,18 +39,14 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
         )
 
 
-
 class PreventStatisticSerializer(serializers.ModelSerializer):
     region = RegionSerializer()
     class Meta:
         model = PreventStatistic
         fields = (
-            'id',
             'year',
-            'disease',
             'region',
-            'standard',
-            'gender',
+            'disease',
             'preventive',
             'curable',
             'preventable',

@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from rest_framework.decorators import action
-
 from .models import (
     DiseaseGroup,
     Region,
@@ -46,6 +46,26 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'year'
     )
 
+    @action(detail = False)
+    def get_labels(self, request):
+        data = None
+        label = self.request.query_params.get('label', None)
+        if label is not None:
+            try:
+                data = self.queryset.order_by(label).values_list(
+                    label, 
+                    flat = True
+                ).distinct()
+            except FieldError as error:
+                return Response(
+                    {"message": "Field error, use only gender, year, age or disease_name"},
+                    status = status.HTTP_400_BAD_REQUEST
+                )
+            
+        return Response(
+            {'labels' : data},
+            status = status.HTTP_200_OK
+        )
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):

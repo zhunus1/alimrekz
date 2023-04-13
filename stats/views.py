@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django.db.models import Max, Min
 from .models import (
     DiseaseGroup,
     Region,
@@ -56,6 +57,9 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     label, 
                     flat = True
                 ).distinct()
+
+                if label == 'year' and len(data) > 0:
+                    data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
             except FieldError as error:
                 return Response(
                     {"message" : "Field error, use only gender, year, age or disease_name"},
@@ -93,6 +97,9 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     label, 
                     flat = True
                 ).distinct()
+
+                if label == 'year' and len(data) > 0:
+                    data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
             except FieldError as error:
                 return Response(
                     {"message" : "Field error, use only disease, gender, standard or year"},

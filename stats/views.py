@@ -61,7 +61,6 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     {"message" : "Field error, use only gender, year, age or disease_name"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
-            
         return Response(
             {'labels' : data},
             status = status.HTTP_200_OK
@@ -83,5 +82,25 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'standard',
         'year'
     )
+
+    @action(detail = False)
+    def get_labels(self, request):
+        data = None
+        label = self.request.query_params.get('label', None)
+        if label is not None:
+            try:
+                data = self.queryset.order_by(label).values_list(
+                    label, 
+                    flat = True
+                ).distinct()
+            except FieldError as error:
+                return Response(
+                    {"message" : "Field error, use only disease, gender, standard or year"},
+                    status = status.HTTP_400_BAD_REQUEST
+                )
+        return Response(
+            {'labels' : data},
+            status = status.HTTP_200_OK
+        )
 
     #TO-DO create separate action for heatmap

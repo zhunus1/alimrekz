@@ -75,8 +75,8 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         filtered_queryset = self.filter_queryset(self.queryset)
 
         data = filtered_queryset.values('region__name', 'year') \
-            .annotate(year_value = Sum('value')) \
-            .order_by('-year')
+            .order_by('year') \
+            .annotate(year_value = Sum('value'))
 
         return Response(
             {'data': data},
@@ -88,6 +88,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         filtered_queryset = self.filter_queryset(self.queryset)
 
         data = filtered_queryset.values('region__name', 'value') \
+            .order_by('value') \
             .annotate(region_value = Sum('value')) \
             .order_by('-region__name')
 
@@ -96,12 +97,6 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             status = status.HTTP_200_OK
         )
         
-
-
-
-
-
-
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PreventStatistic.objects.select_related(
@@ -139,6 +134,36 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                 )
         return Response(
             {'labels' : data},
+            status = status.HTTP_200_OK
+        )
+
+    @action(detail = False)
+    def get_line_chart(self, request):
+        filtered_queryset = self.filter_queryset(self.queryset)
+
+        data = filtered_queryset.values('year') \
+            .order_by('year') \
+            .annotate(preventive_value = Sum('preventive')) \
+            .annotate(curable_value = Sum('curable')) \
+            .annotate(preventable_value = Sum('preventable'))
+
+        return Response(
+            {'data': data},
+            status = status.HTTP_200_OK
+        )
+    
+    @action(detail = False)
+    def get_bar_chart(self, request):
+        filtered_queryset = self.filter_queryset(self.queryset)
+
+        data = filtered_queryset.values('region__name') \
+            .order_by('region__name') \
+            .annotate(preventive_value = Sum('preventive')) \
+            .annotate(curable_value = Sum('curable')) \
+            .annotate(preventable_value = Sum('preventable'))
+
+        return Response(
+            {'data': data},
             status = status.HTTP_200_OK
         )
 

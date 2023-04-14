@@ -39,16 +39,6 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
         )
 
 
-class DeathLineChartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DeathStatistic
-        fields = (
-            'disease_name',
-            'age',
-            'gender',
-        )
-
-
 class PreventStatisticSerializer(serializers.ModelSerializer):
     region = RegionSerializer()
     class Meta:

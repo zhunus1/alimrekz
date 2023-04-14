@@ -16,7 +16,6 @@ from .serializers import (
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
     RegionSerializer,
-    DeathLineChartSerializer,
 )
 
 
@@ -73,18 +72,24 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail = False)
     def get_line_chart(self, request):
-        serializer = DeathLineChartSerializer(data = request.data)
-        serializer.is_valid(raise_exception = True)
-
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.filter(
-            disease_name = serializer.validated_data['disease_name'],
-            age = serializer.validated_data['age'],
-            gender = serializer.validated_data['gender'],
-        ).values('region__name', 'year') \
+        data = filtered_queryset.values('region__name', 'year') \
             .annotate(year_value = Sum('value')) \
             .order_by('-year')
+
+        return Response(
+            {'data': data},
+            status = status.HTTP_200_OK
+        )
+    
+    @action(detail = False)
+    def get_bar_chart(self, request):
+        filtered_queryset = self.filter_queryset(self.queryset)
+
+        data = filtered_queryset.values('region__name', 'value') \
+            .annotate(region_value = Sum('value')) \
+            .order_by('-region__name')
 
         return Response(
             {'data': data},

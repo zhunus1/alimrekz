@@ -4,7 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.db.models import Max, Min
+from django.db.models import Max, Min, Sum
 from .models import (
     DiseaseGroup,
     Region,
@@ -16,6 +16,7 @@ from .serializers import (
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
     RegionSerializer,
+    DeathLineChartSerializer,
 )
 
 
@@ -69,6 +70,32 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             {'labels' : data},
             status = status.HTTP_200_OK
         )
+
+    @action(detail = False)
+    def get_line_chart(self, request):
+        serializer = DeathLineChartSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+
+        filtered_queryset = self.filter_queryset(self.queryset)
+
+        data = filtered_queryset.filter(
+            disease_name = serializer.validated_data['disease_name'],
+            age = serializer.validated_data['age'],
+            gender = serializer.validated_data['gender'],
+        ).values('region__name', 'year') \
+            .annotate(year_value = Sum('value')) \
+            .order_by('-year')
+
+        return Response(
+            {'data': data},
+            status = status.HTTP_200_OK
+        )
+        
+
+
+
+
+
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):

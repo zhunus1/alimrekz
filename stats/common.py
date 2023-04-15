@@ -125,3 +125,4 @@ disease_groups = {
         'COVID-19'
     ],
 }
+

@@ -3,7 +3,13 @@ from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework.decorators import action
+import io
+import pandas as pd
+import seaborn as sns
+import matplotlib
+import matplotlib.pyplot as plt
 from django.db.models import Max, Min, Sum
 from .models import (
     DiseaseGroup,
@@ -167,4 +173,58 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             status = status.HTTP_200_OK
         )
 
-    #TO-DO create separate action for heatmap
+    @action(detail = False)
+    def get_heatmap(self, request):
+        data = None
+        queryset = self.filter_queryset(self.queryset)
+        type = self.request.query_params.get('type', None)
+        
+        if type is not None:
+            try:
+                queryset = queryset.values_list(
+                    "disease",
+                    "region__name",
+                    type
+                )
+
+                df = pd.DataFrame(
+                    list(queryset), 
+                    columns = (
+                        "disease",
+                        "region",
+                        type
+                    )
+                )
+
+                table = pd.pivot_table(
+                    df, 
+                    values = type, 
+                    index = ["disease"], 
+                    columns = ["region"], 
+                    fill_value = 0
+                )
+            
+                regions = table.columns.tolist()
+                diseases = table.index.unique().tolist()
+                values = []
+        
+                for index, row in table.iterrows():
+                    values.append(row.values.tolist())
+                
+                data = {
+                    'regions': regions,
+                    'diseases': diseases,
+                    'values': values,
+                }
+
+            except FieldError as error:
+                return Response(
+                    {"message" : "Field error, use only curable, preventable or preventive"},
+                    status = status.HTTP_400_BAD_REQUEST
+                )
+        return Response(
+            {
+                "data" : data
+            },
+            status = status.HTTP_200_OK
+        )

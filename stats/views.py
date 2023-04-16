@@ -22,7 +22,8 @@ from .serializers import (
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
     RegionSerializer,
-    PreventListSerializer
+    PreventBarChartSerializer,
+    PreventLineChartSerializer
 )
 
 
@@ -151,15 +152,24 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_line_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('year', 'disease') \
-            .order_by('year') \
-            .annotate(preventive_value = Sum('preventive')) \
-            .annotate(curable_value = Sum('curable')) \
-            .annotate(preventable_value = Sum('preventable'))
+        data = filtered_queryset.values('region__name') \
+            .order_by('region__name') \
+            .annotate(region_preventive_total = Sum('preventive')) \
+            .annotate(region_curable_total = Sum('curable')) \
+            .annotate(region_preventable_total = Sum('preventable'))
 
         page = self.paginate_queryset(data)
+        # return self.get_paginated_response(page)
 
-        return self.get_paginated_response(page)
+        if page is not None:
+            serializer = PreventLineChartSerializer(
+                page, 
+                context = {
+                    'queryset': filtered_queryset
+                },
+                many=True
+            )
+            return self.get_paginated_response(serializer.data)
     
     @action(detail = False)
     def get_bar_chart(self, request):
@@ -175,7 +185,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         # return self.get_paginated_response(page)
 
         if page is not None:
-            serializer = PreventListSerializer(
+            serializer = PreventBarChartSerializer(
                 page, 
                 context = {
                     'queryset': filtered_queryset

@@ -41,20 +41,6 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
 
 
 class PreventStatisticSerializer(serializers.ModelSerializer):
-    region = RegionSerializer()
-    class Meta:
-        model = PreventStatistic
-        fields = (
-            'year',
-            'region',
-            'disease',
-            'preventive',
-            'curable',
-            'preventable',
-        )
-
-
-class PreventStatisticSerializer(serializers.ModelSerializer):
     region = serializers.CharField(source="region.name")
     class Meta:
         model = PreventStatistic
@@ -66,7 +52,7 @@ class PreventStatisticSerializer(serializers.ModelSerializer):
         )
 
 
-class PreventListSerializer(serializers.ModelSerializer):
+class PreventBarChartSerializer(serializers.ModelSerializer):
     disease_preventive_total = serializers.FloatField()
     disease_curable_total = serializers.FloatField()
     disease_preventable_total = serializers.FloatField()
@@ -90,4 +76,43 @@ class PreventListSerializer(serializers.ModelSerializer):
             'disease_curable_total',
             'disease_preventable_total',
             'regions'
+        )
+
+
+class PreventStatisticLineChartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PreventStatistic
+        fields = (
+            'disease',
+            'preventive',
+            'curable',
+            'preventable',
+        )
+
+
+class PreventLineChartSerializer(serializers.ModelSerializer):
+    region = serializers.CharField(source='region__name')
+    region_preventive_total = serializers.FloatField()
+    region_curable_total = serializers.FloatField()
+    region_preventable_total = serializers.FloatField()
+    years = serializers.SerializerMethodField()
+
+    def get_years(self, obj):
+
+        return PreventStatisticLineChartSerializer(
+            self.context['queryset'].filter(
+                region__name = obj['region__name'],
+            ), 
+            many = True
+            ).data
+
+
+    class Meta:
+        model = PreventStatistic
+        fields = (
+            'region',
+            'region_preventive_total',
+            'region_curable_total',
+            'region_preventable_total',
+            'years'
         )

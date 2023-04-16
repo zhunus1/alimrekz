@@ -35,6 +35,8 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
             'region',
             'group',
             'year',
+            'age',
+            'gender',
             'disease_name',
             'value',
         )
@@ -46,24 +48,47 @@ class PreventStatisticSerializer(serializers.ModelSerializer):
         model = PreventStatistic
         fields = (
             'region',
+            'year',
+            'disease',
+            'standard',
+            'gender',
             'preventive',
             'curable',
             'preventable',
         )
 
 
+class PreventStatisticBarChartSerializer(serializers.ModelSerializer):
+    preventive_total = serializers.FloatField()
+    curable_total = serializers.FloatField()
+    preventable_total = serializers.FloatField()
+    class Meta:
+        model = PreventStatistic
+        fields = (
+            'disease',
+            'preventive_total',
+            'curable_total',
+            'preventable_total',
+        )
+
+
 class PreventBarChartSerializer(serializers.ModelSerializer):
+    region = serializers.CharField(source='region__name')
     disease_preventive_total = serializers.FloatField()
     disease_curable_total = serializers.FloatField()
     disease_preventable_total = serializers.FloatField()
-    regions = serializers.SerializerMethodField()
+    diseases = serializers.SerializerMethodField()
 
-    def get_regions(self, obj):
+    def get_diseases(self, obj):
 
-        return PreventStatisticSerializer(
+        return PreventStatisticBarChartSerializer(
             self.context['queryset'].filter(
-                disease = obj['disease'],
-            ), 
+                region__name = obj['region__name'],
+            ).values('disease') \
+            .order_by('disease') \
+            .annotate(preventive_total = Sum('preventive')) \
+            .annotate(curable_total = Sum('curable')) \
+            .annotate(preventable_total = Sum('preventable')),
             many = True
             ).data
 
@@ -71,11 +96,11 @@ class PreventBarChartSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreventStatistic
         fields = (
-            'disease',
+            'region',
             'disease_preventive_total',
             'disease_curable_total',
             'disease_preventable_total',
-            'regions'
+            'diseases'
         )
 
 

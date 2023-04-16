@@ -159,7 +159,6 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             .annotate(region_preventable_total = Sum('preventable'))
 
         page = self.paginate_queryset(data)
-        # return self.get_paginated_response(page)
 
         if page is not None:
             serializer = PreventLineChartSerializer(
@@ -175,14 +174,13 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_bar_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = self.queryset.values('disease') \
-            .order_by('disease') \
+        data = self.queryset.values('region__name') \
+            .order_by('region__name') \
             .annotate(disease_preventive_total = Sum('preventive')) \
             .annotate(disease_curable_total = Sum('curable')) \
             .annotate(disease_preventable_total = Sum('preventable'))
 
         page = self.paginate_queryset(data)
-        # return self.get_paginated_response(page)
 
         if page is not None:
             serializer = PreventBarChartSerializer(
@@ -193,7 +191,6 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                 many=True
             )
             return self.get_paginated_response(serializer.data)
-
 
     @action(detail = False)
     def get_heatmap(self, request):

@@ -22,6 +22,7 @@ from .serializers import (
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
     RegionSerializer,
+    PreventListSerializer
 )
 
 
@@ -150,7 +151,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_line_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('year') \
+        data = filtered_queryset.values('year', 'disease') \
             .order_by('year') \
             .annotate(preventive_value = Sum('preventive')) \
             .annotate(curable_value = Sum('curable')) \
@@ -164,15 +165,42 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_bar_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('region__name') \
-            .order_by('region__name') \
-            .annotate(preventive_value = Sum('preventive')) \
-            .annotate(curable_value = Sum('curable')) \
-            .annotate(preventable_value = Sum('preventable'))
+        # {
+        #     curable_value: 16425.38,
+        #     preventable_value: 36894.86,
+        #     preventive_value: 20469.52,
+        #     region__name: "Акмолинская область",
+        #     diseases: [
+        #         {
+        #         name: "disease name 1",
+
+        #         curable_value: 100,
+        #         preventable_value: 200,
+        #         preventive_value: 300,
+        #         },
+        #         {
+        #         name: "disease name 2",
+
+        #         curable_value: 4,
+        #         preventable_value: 5,
+        #         preventive_value: 1000,
+        #         },
+        #     ],
+        # }
+
+
+        data = filtered_queryset.values('region__name', 'year', 'gender', 'standard') \
+            .order_by('year', 'region__name') \
+            .annotate(preventive_total_value = Sum('preventive')) \
+            .annotate(curable_total_value = Sum('curable')) \
+            .annotate(preventable_total_value = Sum('preventable'))
+
 
         page = self.paginate_queryset(data)
+        if page is not None:
+            serializer = PreventListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
-        return self.get_paginated_response(page)
 
     @action(detail = False)
     def get_heatmap(self, request):

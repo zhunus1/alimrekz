@@ -45,11 +45,11 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         DjangoFilterBackend,
     )
     filterset_fields = (
-        'region',
+        'region__name',
         'disease_name',
         'age',
         'gender',
-        'group',
+        'group__name',
         'year'
     )
 
@@ -114,7 +114,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         DjangoFilterBackend,
     )
     filterset_fields = (
-        'region',
+        'region__name',
         'disease',
         'gender',
         'standard',

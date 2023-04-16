@@ -66,9 +66,11 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
                 if label == 'year' and len(data) > 0:
                     data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
+                if label == 'region' and len(data) > 0:
+                    data = self.queryset.order_by('region').values_list('region__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
-                    {"message" : "Field error, use only gender, year, age or disease_name"},
+                    {"message" : "Field error, use only gender, year, region, age or disease_name"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
         return Response(
@@ -88,6 +90,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             {'data': data},
             status = status.HTTP_200_OK
         )
+        
     
     @action(detail = False)
     def get_bar_chart(self, request):
@@ -133,9 +136,11 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
                 if label == 'year' and len(data) > 0:
                     data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
+                if label == 'region' and len(data) > 0:
+                    data = self.queryset.order_by('region').values_list('region__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
-                    {"message" : "Field error, use only disease, gender, standard or year"},
+                    {"message" : "Field error, use only disease, gender, region, standard or year"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
         return Response(

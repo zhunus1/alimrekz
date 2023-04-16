@@ -86,10 +86,9 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             .order_by('year') \
             .annotate(year_value = Sum('value'))
 
-        return Response(
-            {'data': data},
-            status = status.HTTP_200_OK
-        )
+        page = self.paginate_queryset(data)
+
+        return self.get_paginated_response(page)
         
     
     @action(detail = False)
@@ -101,11 +100,10 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             .annotate(region_value = Sum('value')) \
             .order_by('-region__name')
 
-        return Response(
-            {'data': data},
-            status = status.HTTP_200_OK
-        )
-        
+        page = self.paginate_queryset(data)
+
+        return self.get_paginated_response(page)
+
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = PreventStatistic.objects.select_related(
@@ -158,10 +156,9 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             .annotate(curable_value = Sum('curable')) \
             .annotate(preventable_value = Sum('preventable'))
 
-        return Response(
-            {'data': data},
-            status = status.HTTP_200_OK
-        )
+        page = self.paginate_queryset(data)
+
+        return self.get_paginated_response(page)
     
     @action(detail = False)
     def get_bar_chart(self, request):
@@ -173,10 +170,9 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             .annotate(curable_value = Sum('curable')) \
             .annotate(preventable_value = Sum('preventable'))
 
-        return Response(
-            {'data': data},
-            status = status.HTTP_200_OK
-        )
+        page = self.paginate_queryset(data)
+
+        return self.get_paginated_response(page)
 
     @action(detail = False)
     def get_heatmap(self, request):

@@ -55,10 +55,11 @@ class PreventStatisticSerializer(serializers.ModelSerializer):
 
 
 class PreventStatisticSerializer(serializers.ModelSerializer):
+    region = serializers.CharField(source="region.name")
     class Meta:
         model = PreventStatistic
         fields = (
-            'disease',
+            'region',
             'preventive',
             'curable',
             'preventable',
@@ -66,29 +67,27 @@ class PreventStatisticSerializer(serializers.ModelSerializer):
 
 
 class PreventListSerializer(serializers.ModelSerializer):
-    region = serializers.CharField(source='region__name')
-    preventive_total_value = serializers.FloatField()
-    curable_total_value = serializers.FloatField()
-    preventable_total_value = serializers.FloatField()
-    diseases = serializers.SerializerMethodField()
+    disease_preventive_total = serializers.FloatField()
+    disease_curable_total = serializers.FloatField()
+    disease_preventable_total = serializers.FloatField()
+    regions = serializers.SerializerMethodField()
 
-    def get_diseases(self, obj):
+    def get_regions(self, obj):
+
         return PreventStatisticSerializer(
-                    PreventStatistic.objects.filter( 
-                        region__name = obj['region__name'],
-                        year = obj['year'],
-                        gender = obj['gender'],
-                        standard = obj['standard']
-                    ), 
-                    many = True).data
-                
+            self.context['queryset'].filter(
+                disease = obj['disease'],
+            ), 
+            many = True
+            ).data
+
 
     class Meta:
         model = PreventStatistic
         fields = (
-            'region',
-            'preventive_total_value',
-            'curable_total_value',
-            'preventable_total_value',
-            'diseases'
+            'disease',
+            'disease_preventive_total',
+            'disease_curable_total',
+            'disease_preventable_total',
+            'regions'
         )

@@ -23,7 +23,9 @@ from .serializers import (
     DiseaseGroupSerializer,
     RegionSerializer,
     PreventBarChartSerializer,
-    PreventLineChartSerializer
+    PreventLineChartSerializer,
+    DeathLineChartSerializer,
+    DeathBarChartSerializer
 )
 
 
@@ -86,27 +88,42 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_line_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('region__name', 'year') \
+        data = filtered_queryset.values('year') \
             .order_by('year') \
-            .annotate(year_value = Sum('value'))
+            .annotate(year_total_value = Sum('value'))
 
         page = self.paginate_queryset(data)
 
-        return self.get_paginated_response(page)
+        if page is not None:
+            serializer = DeathLineChartSerializer(
+                page, 
+                context = {
+                    'queryset': filtered_queryset
+                },
+                many=True
+            )
+            return self.get_paginated_response(serializer.data)
         
     
     @action(detail = False)
     def get_bar_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('region__name', 'value') \
-            .order_by('value') \
-            .annotate(region_value = Sum('value')) \
-            .order_by('-region__name')
+        data = filtered_queryset.values('region__name') \
+            .order_by('region__name') \
+            .annotate(region_value_total = Sum('value'))
 
         page = self.paginate_queryset(data)
 
-        return self.get_paginated_response(page)
+        if page is not None:
+            serializer = DeathBarChartSerializer(
+                page, 
+                context = {
+                    'queryset': filtered_queryset
+                },
+                many=True
+            )
+            return self.get_paginated_response(serializer.data)
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):

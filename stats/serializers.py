@@ -42,6 +42,81 @@ class DeathStatisticSerializer(serializers.ModelSerializer):
         )
 
 
+class DeathStatisticLineChartSerializer(serializers.ModelSerializer): 
+    region = serializers.CharField(source='region__name')
+    value_total = serializers.FloatField()
+    class Meta:
+        model = DeathStatistic
+        fields = (
+            'region',
+            'value_total',
+        )
+
+
+class DeathLineChartSerializer(serializers.ModelSerializer):
+    year = serializers.CharField()
+    year_total_value = serializers.FloatField()
+    regions = serializers.SerializerMethodField()
+
+    def get_regions(self, obj):
+
+        return DeathStatisticLineChartSerializer(
+            self.context['queryset'].filter(
+                year = obj['year'],
+            ).values('region__name') \
+            .order_by('region__name') \
+            .annotate(value_total = Sum('value')),
+            many = True
+            ).data
+
+
+    class Meta:
+        model = DeathStatistic
+        fields = (
+            'year',
+            'year_total_value',
+            'regions'
+        )
+
+
+class DeathStatisticBarChartSerializer(serializers.ModelSerializer):
+    group = serializers.CharField(source='group__name')
+    value_total = serializers.FloatField()
+    class Meta:
+        model = DeathStatistic
+        fields = (
+            'group',
+            'value_total',
+        )
+
+
+class DeathBarChartSerializer(serializers.ModelSerializer):
+    region = serializers.CharField(source='region__name')
+    region_value_total = serializers.FloatField()
+    diseases = serializers.SerializerMethodField()
+
+    def get_diseases(self, obj):
+
+        return DeathStatisticBarChartSerializer(
+            self.context['queryset'].filter(
+                region__name = obj['region__name'],
+            ).values('group__name') \
+            .order_by('group__name') \
+            .annotate(value_total = Sum('value')),
+            many = True
+            ).data
+
+
+    class Meta:
+        model = DeathStatistic
+        fields = (
+            'region',
+            'region_value_total',
+            'diseases'
+        )
+
+
+
 class PreventStatisticSerializer(serializers.ModelSerializer):
     region = serializers.CharField(source="region.name")
     class Meta:
@@ -149,3 +224,5 @@ class PreventLineChartSerializer(serializers.ModelSerializer):
             'year_preventable_total',
             'regions'
         )
+
+

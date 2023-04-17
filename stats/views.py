@@ -174,7 +174,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_bar_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = self.queryset.values('region__name') \
+        data = filtered_queryset.values('region__name') \
             .order_by('region__name') \
             .annotate(disease_preventive_total = Sum('preventive')) \
             .annotate(disease_curable_total = Sum('curable')) \

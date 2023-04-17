@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
     'rest_framework',
+    'corsheaders',
     'stats',
 ]
 

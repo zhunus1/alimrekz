@@ -152,11 +152,11 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_line_chart(self, request):
         filtered_queryset = self.filter_queryset(self.queryset)
 
-        data = filtered_queryset.values('region__name') \
-            .order_by('region__name') \
-            .annotate(region_preventive_total = Sum('preventive')) \
-            .annotate(region_curable_total = Sum('curable')) \
-            .annotate(region_preventable_total = Sum('preventable'))
+        data = filtered_queryset.values('year') \
+            .order_by('year') \
+            .annotate(year_preventive_total = Sum('preventive')) \
+            .annotate(year_curable_total = Sum('curable')) \
+            .annotate(year_preventable_total = Sum('preventable'))
 
         page = self.paginate_queryset(data)
 

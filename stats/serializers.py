@@ -104,30 +104,38 @@ class PreventBarChartSerializer(serializers.ModelSerializer):
         )
 
 
-class PreventStatisticLineChartSerializer(serializers.ModelSerializer):
+class PreventStatisticLineChartSerializer(serializers.ModelSerializer): 
+    region = serializers.CharField(source='region__name')
+    preventive_total = serializers.FloatField()
+    curable_total = serializers.FloatField()
+    preventable_total = serializers.FloatField()
     class Meta:
         model = PreventStatistic
         fields = (
-            'disease',
-            'preventive',
-            'curable',
-            'preventable',
+            'region',
+            'preventive_total',
+            'curable_total',
+            'preventable_total',
         )
 
 
 class PreventLineChartSerializer(serializers.ModelSerializer):
-    region = serializers.CharField(source='region__name')
-    region_preventive_total = serializers.FloatField()
-    region_curable_total = serializers.FloatField()
-    region_preventable_total = serializers.FloatField()
-    years = serializers.SerializerMethodField()
+    year = serializers.CharField()
+    year_preventive_total = serializers.FloatField()
+    year_curable_total = serializers.FloatField()
+    year_preventable_total = serializers.FloatField()
+    regions = serializers.SerializerMethodField()
 
-    def get_years(self, obj):
+    def get_regions(self, obj):
 
         return PreventStatisticLineChartSerializer(
             self.context['queryset'].filter(
-                region__name = obj['region__name'],
-            ), 
+                year = obj['year'],
+            ).values('region__name') \
+            .order_by('region__name') \
+            .annotate(preventive_total = Sum('preventive')) \
+            .annotate(curable_total = Sum('curable')) \
+            .annotate(preventable_total = Sum('preventable')),
             many = True
             ).data
 
@@ -135,9 +143,9 @@ class PreventLineChartSerializer(serializers.ModelSerializer):
     class Meta:
         model = PreventStatistic
         fields = (
-            'region',
-            'region_preventive_total',
-            'region_curable_total',
-            'region_preventable_total',
-            'years'
+            'year',
+            'year_preventive_total',
+            'year_curable_total',
+            'year_preventable_total',
+            'regions'
         )

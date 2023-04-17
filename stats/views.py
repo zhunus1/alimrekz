@@ -70,6 +70,8 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
                 if label == 'region' and len(data) > 0:
                     data = self.queryset.order_by('region').values_list('region__name', flat=True).distinct()
+                if label == 'group' and len(data) > 0:
+                    data = self.queryset.order_by('group').values_list('group__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
                     {"message" : "Field error, use only gender, year, region, age or disease_name"},

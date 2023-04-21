@@ -10,8 +10,8 @@ from .views import (
 router = routers.DefaultRouter()
 router.register(r'disease-groups', DiseaseGroupViewSet)
 router.register(r'regions', RegionViewSet)
-router.register(r'death-statistics', DeathStatisticViewSet)
-router.register(r'prevent-statistics', PreventStatisticViewSet)
+router.register(r'death-statistics', DeathStatisticViewSet, basename = 'death-statistics')
+router.register(r'prevent-statistics', PreventStatisticViewSet, basename = 'prevent-statistics')
 
 urlpatterns = [
     path('', include(router.urls)),

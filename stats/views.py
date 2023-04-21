@@ -40,10 +40,6 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = DeathStatistic.objects.select_related(
-        'region',
-        'group'
-    ).all()
     serializer_class = DeathStatisticSerializer
     filter_backends = (
         DjangoFilterBackend,
@@ -57,23 +53,40 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'year'
     )
 
+    def get_queryset(self):
+        queryset = DeathStatistic.objects.select_related(
+            'region',
+            'group'
+        ).all()
+
+        regions = self.request.query_params.get('regions', None)
+        groups = self.request.query_params.get('groups', None)
+
+        if regions is not None:
+            queryset = queryset.filter(region__name__in = regions.split(','))
+
+        if groups is not None:
+            queryset = queryset.filter(group__name__in = groups.split(','))
+
+        return queryset
+
     @action(detail = False)
     def get_labels(self, request):
         data = None
         label = self.request.query_params.get('label', None)
         if label is not None:
             try:
-                data = self.queryset.order_by(label).values_list(
+                data = self.get_queryset().order_by(label).values_list(
                     label, 
                     flat = True
                 ).distinct()
 
                 if label == 'year' and len(data) > 0:
-                    data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
+                    data = self.get_queryset().order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
                 if label == 'region' and len(data) > 0:
-                    data = self.queryset.order_by('region').values_list('region__name', flat=True).distinct()
+                    data = self.get_queryset().order_by('region').values_list('region__name', flat=True).distinct()
                 if label == 'group' and len(data) > 0:
-                    data = self.queryset.order_by('group').values_list('group__name', flat=True).distinct()
+                    data = self.get_queryset().order_by('group').values_list('group__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
                     {"message" : "Field error, use only gender, year, region, age or disease_name"},
@@ -86,7 +99,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail = False)
     def get_line_chart(self, request):
-        filtered_queryset = self.filter_queryset(self.queryset)
+        filtered_queryset = self.filter_queryset(self.get_queryset())
 
         data = filtered_queryset.values('year') \
             .order_by('year') \
@@ -107,7 +120,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail = False)
     def get_bar_chart(self, request):
-        filtered_queryset = self.filter_queryset(self.queryset)
+        filtered_queryset = self.filter_queryset(self.get_queryset())
 
         data = filtered_queryset.values('region__name') \
             .order_by('region__name') \
@@ -127,9 +140,6 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = PreventStatistic.objects.select_related(
-        'region',
-    ).all()
     serializer_class = PreventStatisticSerializer
     filter_backends = (
         DjangoFilterBackend,
@@ -142,21 +152,37 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         'year'
     )
 
+    def get_queryset(self):
+        queryset = PreventStatistic.objects.select_related(
+            'region',
+        ).all()
+
+        regions = self.request.query_params.get('regions', None)
+        diseases = self.request.query_params.get('diseases', None)
+
+        if regions is not None:
+            queryset = queryset.filter(region__name__in = regions.split(','))
+
+        if diseases is not None:
+            queryset = queryset.filter(disease__in = diseases.split(','))
+
+        return queryset
+
     @action(detail = False)
     def get_labels(self, request):
         data = None
         label = self.request.query_params.get('label', None)
         if label is not None:
             try:
-                data = self.queryset.order_by(label).values_list(
+                data = self.get_queryset().order_by(label).values_list(
                     label, 
                     flat = True
                 ).distinct()
 
                 if label == 'year' and len(data) > 0:
-                    data = self.queryset.order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
+                    data = self.get_queryset().order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
                 if label == 'region' and len(data) > 0:
-                    data = self.queryset.order_by('region').values_list('region__name', flat=True).distinct()
+                    data = self.get_queryset().order_by('region').values_list('region__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
                     {"message" : "Field error, use only disease, gender, region, standard or year"},
@@ -169,7 +195,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail = False)
     def get_line_chart(self, request):
-        filtered_queryset = self.filter_queryset(self.queryset)
+        filtered_queryset = self.filter_queryset(self.get_queryset())
 
         data = filtered_queryset.values('year') \
             .order_by('year') \
@@ -191,7 +217,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail = False)
     def get_bar_chart(self, request):
-        filtered_queryset = self.filter_queryset(self.queryset)
+        filtered_queryset = self.filter_queryset(self.get_queryset())
 
         data = filtered_queryset.values('region__name') \
             .order_by('region__name') \
@@ -214,7 +240,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail = False)
     def get_heatmap(self, request):
         data = None
-        queryset = self.filter_queryset(self.queryset)
+        queryset = self.filter_queryset(self.get_queryset())
         type = self.request.query_params.get('type', None)
         
         if type is not None:

@@ -45,6 +45,7 @@ class PreventStatisticModelAdmin(admin.ModelAdmin):
     fields = (
         'region',
         'year',
+        'group',
         'disease',
         'standard',
         'gender',

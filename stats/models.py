@@ -226,6 +226,12 @@ class PreventStatistic(models.Model):
         verbose_name = "Год",
     )
 
+    group = models.ForeignKey(
+        DiseaseGroup, 
+        on_delete = models.CASCADE,
+        verbose_name = "Группа заболевания",
+    )
+
     disease = models.CharField(
         max_length = 255,
         verbose_name = "Болезнь",

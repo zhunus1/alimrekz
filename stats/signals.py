@@ -72,11 +72,17 @@ def create_data(sender, instance, created, **kwargs):
                 region = Region.objects.get(
                     name = row['регион'],
                 )
+                group_name = find_group(row['Тип заболевания'], disease_groups)
+                group = DiseaseGroup.objects.get(
+                    name = group_name,
+                )
+
                 prevent_records.append(
                     PreventStatistic(
                         region = region,
                         year = row['годы'],
                         disease = row['Тип заболевания'],
+                        group = group,
                         standard = row['Стандарт'],
                         gender = row['Пол'],
                         preventive = row['Превентивная'],

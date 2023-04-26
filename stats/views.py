@@ -11,6 +11,7 @@ import seaborn as sns
 import matplotlib
 import matplotlib.pyplot as plt
 from django.db.models import Max, Min, Sum
+from .common import disease_groups
 from .models import (
     DiseaseGroup,
     Region,
@@ -33,6 +34,12 @@ class DiseaseGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DiseaseGroup.objects.all()
     serializer_class = DiseaseGroupSerializer
 
+    @action(detail = False)
+    def get_groups(self, request):
+        return Response(
+            {'data' : disease_groups},
+            status = status.HTTP_200_OK
+        )
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()
@@ -61,12 +68,16 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
         regions = self.request.query_params.get('regions', None)
         groups = self.request.query_params.get('groups', None)
+        diseases = self.request.query_params.get('diseases', None)
 
         if regions is not None:
             queryset = queryset.filter(region__name__in = regions.split(','))
 
         if groups is not None:
             queryset = queryset.filter(group__name__in = groups.split(','))
+        
+        if diseases is not None:
+            queryset = queryset.filter(disease_name__in = diseases.split(','))
 
         return queryset
 
@@ -155,13 +166,18 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = PreventStatistic.objects.select_related(
             'region',
+            'group'
         ).all()
 
         regions = self.request.query_params.get('regions', None)
+        groups = self.request.query_params.get('groups', None)
         diseases = self.request.query_params.get('diseases', None)
 
         if regions is not None:
             queryset = queryset.filter(region__name__in = regions.split(','))
+        
+        if groups is not None:
+            queryset = queryset.filter(group__name__in = groups.split(','))
 
         if diseases is not None:
             queryset = queryset.filter(disease__in = diseases.split(','))

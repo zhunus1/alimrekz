@@ -71,13 +71,13 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         diseases = self.request.query_params.get('diseases', None)
 
         if regions is not None:
-            queryset = queryset.filter(region__name__in = regions.split(','))
+            queryset = queryset.filter(region__name__in = regions.split('|'))
 
         if groups is not None:
-            queryset = queryset.filter(group__name__in = groups.split(','))
+            queryset = queryset.filter(group__name__in = groups.split('|'))
         
         if diseases is not None:
-            queryset = queryset.filter(disease_name__in = diseases.split(','))
+            queryset = queryset.filter(disease_name__in = diseases.split('|'))
 
         return queryset
 
@@ -174,13 +174,13 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         diseases = self.request.query_params.get('diseases', None)
 
         if regions is not None:
-            queryset = queryset.filter(region__name__in = regions.split(','))
+            queryset = queryset.filter(region__name__in = regions.split('|'))
         
         if groups is not None:
-            queryset = queryset.filter(group__name__in = groups.split(','))
+            queryset = queryset.filter(group__name__in = groups.split('|'))
 
         if diseases is not None:
-            queryset = queryset.filter(disease__in = diseases.split(','))
+            queryset = queryset.filter(disease__in = diseases.split('|'))
 
         return queryset
 

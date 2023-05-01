@@ -38,7 +38,6 @@ class RegionModelAdmin(admin.ModelAdmin):
 class DeathStatisticModelAdmin(admin.ModelAdmin):
     fields = (
         'region',
-        'group',
         'year',
         'age',
         'gender',

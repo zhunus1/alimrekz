@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import (
     StatisticDocument,
     DiseaseGroup,
+    Disease,
     Region,
     DeathStatistic,
     PreventStatistic
@@ -13,11 +14,16 @@ class StatisticDocumentModelAdmin(admin.ModelAdmin):
     fields = (
         'document_type',
         'document',
-        'year',
     )
 
 @admin.register(DiseaseGroup)
 class DiseaseGroupModelAdmin(admin.ModelAdmin):
+    fields = (
+        'name',
+    )
+
+@admin.register(Disease)
+class DiseaseModelAdmin(admin.ModelAdmin):
     fields = (
         'name',
     )
@@ -37,7 +43,7 @@ class DeathStatisticModelAdmin(admin.ModelAdmin):
         'age',
         'gender',
         'value',
-        'disease_name',
+        'disease',
     )
 
 @admin.register(PreventStatistic)
@@ -45,7 +51,6 @@ class PreventStatisticModelAdmin(admin.ModelAdmin):
     fields = (
         'region',
         'year',
-        'group',
         'disease',
         'standard',
         'gender',

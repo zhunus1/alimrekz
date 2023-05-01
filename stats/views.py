@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from .filters import (
+    DeathFilterBackend,
+)
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from django.http import HttpResponse
@@ -34,12 +37,6 @@ class DiseaseGroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DiseaseGroup.objects.all()
     serializer_class = DiseaseGroupSerializer
 
-    @action(detail = False)
-    def get_groups(self, request):
-        return Response(
-            {'data' : disease_groups},
-            status = status.HTTP_200_OK
-        )
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()
@@ -51,34 +48,13 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (
         DjangoFilterBackend,
     )
-    filterset_fields = (
-        'region__name',
-        'disease_name',
-        'age',
-        'gender',
-        'group__name',
-        'year'
-    )
+    filterset_class = DeathFilterBackend
 
     def get_queryset(self):
         queryset = DeathStatistic.objects.select_related(
             'region',
-            'group'
+            'disease'
         ).all()
-
-        regions = self.request.query_params.get('regions', None)
-        groups = self.request.query_params.get('groups', None)
-        diseases = self.request.query_params.get('diseases', None)
-
-        if regions is not None:
-            queryset = queryset.filter(region__name__in = regions.split('|'))
-
-        if groups is not None:
-            queryset = queryset.filter(group__name__in = groups.split('|'))
-        
-        if diseases is not None:
-            queryset = queryset.filter(disease_name__in = diseases.split('|'))
-
         return queryset
 
     @action(detail = False)
@@ -91,16 +67,11 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     label, 
                     flat = True
                 ).distinct()
-
-                if label == 'year' and len(data) > 0:
+                if label == 'year':
                     data = self.get_queryset().order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
-                if label == 'region' and len(data) > 0:
-                    data = self.get_queryset().order_by('region').values_list('region__name', flat=True).distinct()
-                if label == 'group' and len(data) > 0:
-                    data = self.get_queryset().order_by('group').values_list('group__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
-                    {"message" : "Field error, use only gender, year, region, age or disease_name"},
+                    {"message" : "Field error, use only gender, year, age"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
         return Response(
@@ -156,7 +127,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         DjangoFilterBackend,
     )
     filterset_fields = (
-        'region__name',
+        'region',
         'disease',
         'gender',
         'standard',
@@ -166,7 +137,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = PreventStatistic.objects.select_related(
             'region',
-            'group'
+            'disease'
         ).all()
 
         regions = self.request.query_params.get('regions', None)
@@ -194,14 +165,11 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     label, 
                     flat = True
                 ).distinct()
-
                 if label == 'year' and len(data) > 0:
                     data = self.get_queryset().order_by('year').values_list('year', flat=True).aggregate(Min('year'), Max('year'))
-                if label == 'region' and len(data) > 0:
-                    data = self.get_queryset().order_by('region').values_list('region__name', flat=True).distinct()
             except FieldError as error:
                 return Response(
-                    {"message" : "Field error, use only disease, gender, region, standard or year"},
+                    {"message" : "Field error, use only gender, standard or year"},
                     status = status.HTTP_400_BAD_REQUEST
                 )
         return Response(
@@ -262,7 +230,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         if type is not None:
             try:
                 queryset = queryset.values_list(
-                    "disease",
+                    "disease__name",
                     "region__name",
                     type
                 )

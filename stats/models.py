@@ -32,14 +32,6 @@ class StatisticDocument(models.Model):
         ],
         verbose_name = "Документ",
     )
-    
-    year = models.PositiveIntegerField(
-        validators = [
-            MinValueValidator(1991), 
-            max_value_current_year
-        ],
-        verbose_name = "Год",
-    )
 
     created = models.DateTimeField(
         verbose_name = "Создано",
@@ -52,7 +44,7 @@ class StatisticDocument(models.Model):
     )
 
     def __str__(self):
-        return "Документ за %s год" % self.year
+        return str(self.pk)
     
     class Meta:
         verbose_name = "Документ"
@@ -79,8 +71,39 @@ class DiseaseGroup(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Группа болезни"
-        verbose_name_plural = "Группа болезней"
+        verbose_name = "Группа заболеваний"
+        verbose_name_plural = "Группы заболеваний"
+
+
+class Disease(models.Model):
+    group = models.ForeignKey(
+        DiseaseGroup, 
+        on_delete = models.CASCADE,
+        verbose_name = "Группа заболевания",
+        related_name = 'diseases'
+    )
+    
+    name = models.CharField(
+        max_length = 255,
+        verbose_name = "Название",
+    )
+
+    created = models.DateTimeField(
+        verbose_name = "Создано",
+        auto_now_add = True,
+    )
+
+    updated = models.DateTimeField(
+        verbose_name = "Обновлено",
+        auto_now = True,
+    )
+    
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Заболевание"
+        verbose_name_plural = "Заболевания"
 
 
 class Region(models.Model):
@@ -138,10 +161,10 @@ class DeathStatistic(models.Model):
         verbose_name = "Регион",
     )
 
-    group = models.ForeignKey(
-        DiseaseGroup, 
+    disease = models.ForeignKey(
+        Disease, 
         on_delete = models.CASCADE,
-        verbose_name = "Группа заболевания",
+        verbose_name = "Заболевание",
     )
 
     year = models.PositiveIntegerField(
@@ -168,11 +191,6 @@ class DeathStatistic(models.Model):
         verbose_name = "Значение",
     )
 
-    disease_name = models.CharField(
-        max_length = 255,
-        verbose_name = "Болезнь",
-    )
-
     created = models.DateTimeField(
         verbose_name = "Создано",
         auto_now_add = True,
@@ -193,7 +211,7 @@ class DeathStatistic(models.Model):
                     'year',
                     'age',
                     'gender',
-                    'disease_name'
+                    'disease'
                 ],
                 name = "death_statistic_unique"
             )
@@ -226,15 +244,10 @@ class PreventStatistic(models.Model):
         verbose_name = "Год",
     )
 
-    group = models.ForeignKey(
-        DiseaseGroup, 
+    disease = models.ForeignKey(
+        Disease, 
         on_delete = models.CASCADE,
-        verbose_name = "Группа заболевания",
-    )
-
-    disease = models.CharField(
-        max_length = 255,
-        verbose_name = "Болезнь",
+        verbose_name = "Заболевание",
     )
 
     standard = models.CharField(

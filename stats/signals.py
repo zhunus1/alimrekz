@@ -2,19 +2,14 @@ import os
 import pandas as pd
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .common import *
 from .models import (
     StatisticDocument,
     DiseaseGroup,
+    Disease,
     Region,
     DeathStatistic,
     PreventStatistic
 )
-
-def find_group(val, dictionary):
-    for k, v in dictionary.items():
-        if val in v:
-            return k
  
 @receiver(post_save, sender = StatisticDocument)
 def create_data(sender, instance, created, **kwargs):
@@ -41,20 +36,18 @@ def create_data(sender, instance, created, **kwargs):
 
 
                 for disease in diseases:
-                    group_name = find_group(disease, disease_groups)
-                    group = DiseaseGroup.objects.get(
-                        name = group_name,
-                    )
                     value = row[disease]
-
+                    disease = Disease.objects.get(
+                        name = disease,
+                    )
+                    
                     death_records.append(
                         DeathStatistic(
                             year = year,
                             region = region,
-                            disease_name = disease,
+                            disease = disease,
                             age = age,
                             gender = gender,
-                            group = group,
                             value = value,
                         )
                     )
@@ -72,17 +65,15 @@ def create_data(sender, instance, created, **kwargs):
                 region = Region.objects.get(
                     name = row['регион'],
                 )
-                group_name = find_group(row['Тип заболевания'], disease_groups)
-                group = DiseaseGroup.objects.get(
-                    name = group_name,
+                disease = Disease.objects.get(
+                    name = row['Тип заболевания'],
                 )
 
                 prevent_records.append(
                     PreventStatistic(
                         region = region,
                         year = row['годы'],
-                        disease = row['Тип заболевания'],
-                        group = group,
+                        disease = disease,
                         standard = row['Стандарт'],
                         gender = row['Пол'],
                         preventive = row['Превентивная'],

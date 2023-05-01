@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.db.models import Max, Min, Sum
 from .models import (
     DiseaseGroup,
+    Disease,
     Region,
     DeathStatistic,
     PreventStatistic
@@ -17,32 +18,42 @@ class RegionSerializer(serializers.ModelSerializer):
         )
 
 
-class DiseaseGroupSerializer(serializers.ModelSerializer):
+class DiseaseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DiseaseGroup
+        model = Disease
         fields = (
             'id',
             'name',
         )
 
 
+class DiseaseGroupSerializer(serializers.ModelSerializer):
+    diseases = DiseaseSerializer(many = True)
+    class Meta:
+        model = DiseaseGroup
+        fields = (
+            'id',
+            'name',
+            'diseases'
+        )
+
+
 class DeathStatisticSerializer(serializers.ModelSerializer):
     region = RegionSerializer()
-    group = DiseaseGroupSerializer()
+    disease = DiseaseSerializer()
     class Meta:
         model = DeathStatistic
         fields = (
             'region',
-            'group',
+            'disease',
             'year',
             'age',
             'gender',
-            'disease_name',
             'value',
         )
 
 
-class DeathStatisticLineChartSerializer(serializers.ModelSerializer): 
+class DeathLineDataSerializer(serializers.ModelSerializer): 
     region = serializers.CharField(source='region__name')
     value_total = serializers.FloatField()
     class Meta:
@@ -60,7 +71,7 @@ class DeathLineChartSerializer(serializers.ModelSerializer):
 
     def get_regions(self, obj):
 
-        return DeathStatisticLineChartSerializer(
+        return DeathLineDataSerializer(
             self.context['queryset'].filter(
                 year = obj['year'],
             ).values('region__name') \
@@ -79,8 +90,8 @@ class DeathLineChartSerializer(serializers.ModelSerializer):
         )
 
 
-class DeathStatisticBarChartSerializer(serializers.ModelSerializer):
-    group = serializers.CharField(source='group__name')
+class DeathBarDataSerializer(serializers.ModelSerializer):
+    group = serializers.CharField(source = 'disease__group__name')
     value_total = serializers.FloatField()
     class Meta:
         model = DeathStatistic
@@ -97,11 +108,11 @@ class DeathBarChartSerializer(serializers.ModelSerializer):
 
     def get_diseases(self, obj):
 
-        return DeathStatisticBarChartSerializer(
+        return DeathBarDataSerializer(
             self.context['queryset'].filter(
                 region__name = obj['region__name'],
-            ).values('group__name') \
-            .order_by('group__name') \
+            ).values('disease__group__name') \
+            .order_by('disease__group__name') \
             .annotate(value_total = Sum('value')),
             many = True
             ).data
@@ -119,6 +130,7 @@ class DeathBarChartSerializer(serializers.ModelSerializer):
 
 class PreventStatisticSerializer(serializers.ModelSerializer):
     region = serializers.CharField(source="region.name")
+    disease = serializers.CharField(source="disease.name")
     class Meta:
         model = PreventStatistic
         fields = (
@@ -133,10 +145,11 @@ class PreventStatisticSerializer(serializers.ModelSerializer):
         )
 
 
-class PreventStatisticBarChartSerializer(serializers.ModelSerializer):
+class PreventBarDataSerializer(serializers.ModelSerializer):
     preventive_total = serializers.FloatField()
     curable_total = serializers.FloatField()
     preventable_total = serializers.FloatField()
+    disease = serializers.CharField(source="disease__name")
     class Meta:
         model = PreventStatistic
         fields = (
@@ -156,11 +169,11 @@ class PreventBarChartSerializer(serializers.ModelSerializer):
 
     def get_diseases(self, obj):
 
-        return PreventStatisticBarChartSerializer(
+        return PreventBarDataSerializer(
             self.context['queryset'].filter(
                 region__name = obj['region__name'],
-            ).values('disease') \
-            .order_by('disease') \
+            ).values('disease__name') \
+            .order_by('disease__name') \
             .annotate(preventive_total = Sum('preventive')) \
             .annotate(curable_total = Sum('curable')) \
             .annotate(preventable_total = Sum('preventable')),
@@ -179,7 +192,7 @@ class PreventBarChartSerializer(serializers.ModelSerializer):
         )
 
 
-class PreventStatisticLineChartSerializer(serializers.ModelSerializer): 
+class PreventLineDataSerializer(serializers.ModelSerializer): 
     region = serializers.CharField(source='region__name')
     preventive_total = serializers.FloatField()
     curable_total = serializers.FloatField()
@@ -203,7 +216,7 @@ class PreventLineChartSerializer(serializers.ModelSerializer):
 
     def get_regions(self, obj):
 
-        return PreventStatisticLineChartSerializer(
+        return PreventLineDataSerializer(
             self.context['queryset'].filter(
                 year = obj['year'],
             ).values('region__name') \

@@ -1,3 +1,8 @@
+from .models import (
+    DiseaseGroup,
+    Disease
+)
+
 disease_groups = {
     'Инфекционные заболевания':[
         'Кишечные заболевания',
@@ -126,3 +131,15 @@ disease_groups = {
     ],
 }
 
+
+
+def create_objects():
+    for key, value in disease_groups.items():
+        group = DiseaseGroup.objects.create(
+            name = key,
+        )
+        for disease in value:
+            disease = Disease.objects.create(
+                name = disease,
+                group = group,
+            )

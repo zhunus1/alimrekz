@@ -3,6 +3,7 @@ from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import (
     DeathFilterBackend,
+    PreventFilterBackend
 )
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
@@ -126,33 +127,13 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (
         DjangoFilterBackend,
     )
-    filterset_fields = (
-        'region',
-        'disease',
-        'gender',
-        'standard',
-        'year'
-    )
+    filterset_class = PreventFilterBackend
 
     def get_queryset(self):
         queryset = PreventStatistic.objects.select_related(
             'region',
             'disease'
         ).all()
-
-        regions = self.request.query_params.get('regions', None)
-        groups = self.request.query_params.get('groups', None)
-        diseases = self.request.query_params.get('diseases', None)
-
-        if regions is not None:
-            queryset = queryset.filter(region__name__in = regions.split('|'))
-        
-        if groups is not None:
-            queryset = queryset.filter(group__name__in = groups.split('|'))
-
-        if diseases is not None:
-            queryset = queryset.filter(disease__in = diseases.split('|'))
-
         return queryset
 
     @action(detail = False)

@@ -27,10 +27,12 @@ from .serializers import (
     PreventStatisticSerializer,
     DiseaseGroupSerializer,
     RegionSerializer,
-    PreventBarChartSerializer,
+    PreventDiseaseBarChartSerializer,
+    PreventGroupBarChartSerializer,
     PreventLineChartSerializer,
     DeathLineChartSerializer,
-    DeathBarChartSerializer
+    DeathGroupBarChartSerializer,
+    DeathDiseaseBarChartSerializer
 )
 
 
@@ -45,7 +47,6 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = DeathStatisticSerializer
     filter_backends = (
         DjangoFilterBackend,
     )
@@ -57,6 +58,14 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             'disease'
         ).all()
         return queryset
+    
+    def get_serializer_class(self):
+        if self.action == 'get_bar_chart':
+            if self.request.query_params.get('diseases'):
+                return DeathDiseaseBarChartSerializer
+            return DeathGroupBarChartSerializer
+        return DeathStatisticSerializer
+        
 
     @action(detail = False)
     def get_labels(self, request):
@@ -112,7 +121,7 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         page = self.paginate_queryset(data)
 
         if page is not None:
-            serializer = DeathBarChartSerializer(
+            serializer = self.get_serializer(
                 page, 
                 context = {
                     'queryset': filtered_queryset
@@ -123,7 +132,6 @@ class DeathStatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = PreventStatisticSerializer
     filter_backends = (
         DjangoFilterBackend,
     )
@@ -135,6 +143,13 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             'disease'
         ).all()
         return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'get_bar_chart':
+            if self.request.query_params.get('diseases'):
+                return PreventDiseaseBarChartSerializer
+            return PreventGroupBarChartSerializer
+        return PreventStatisticSerializer
 
     @action(detail = False)
     def get_labels(self, request):
@@ -193,7 +208,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
         page = self.paginate_queryset(data)
 
         if page is not None:
-            serializer = PreventBarChartSerializer(
+            serializer = self.get_serializer(
                 page, 
                 context = {
                     'queryset': filtered_queryset
@@ -212,6 +227,7 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
             try:
                 queryset = queryset.values_list(
                     "disease__name",
+                    "disease__group__name",
                     "region__name",
                     type
                 )
@@ -220,15 +236,21 @@ class PreventStatisticViewSet(viewsets.ReadOnlyModelViewSet):
                     list(queryset), 
                     columns = (
                         "disease",
+                        "group",
                         "region",
                         type
                     )
                 )
 
+                index = "disease"
+                groups = self.request.query_params.get('groups', None)
+                if groups is not None:
+                    index = "group"
+                
                 table = pd.pivot_table(
                     df, 
                     values = type, 
-                    index = ["disease"], 
+                    index = [index], 
                     columns = ["region"], 
                     fill_value = 0
                 )

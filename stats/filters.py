@@ -19,7 +19,6 @@ class DeathFilterBackend(filters.FilterSet):
             'groups',
             'diseases',
             'region',
-            'disease',
             'age',
             'gender',
             'year'
@@ -37,7 +36,6 @@ class PreventFilterBackend(filters.FilterSet):
             'groups',
             'diseases',
             'region',
-            'disease',
             'gender',
             'standard',
             'year'

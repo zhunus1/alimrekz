@@ -32,7 +32,7 @@ from .serializers import (
     PreventLineChartSerializer,
     DeathLineChartSerializer,
     DeathGroupBarChartSerializer,
-    DeathDiseaseBarChartSerializer
+    DeathDiseaseBarChartSerializer,
 )
 
 
